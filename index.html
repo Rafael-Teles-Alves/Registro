@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="3456426.png" type="image/x-icon">
+    <title>Registro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+            border: 2px solid #363636;
+            border-radius: 7px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #124909;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 25px;
+            background-color: #09498d;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }button:hover {
+            background-color: #0b73e2;
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #777373;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Registro</h2>
+        <form id="kpiForm">
+            <label for="nomeFornecedor">Nome:</label>
+            <input type="text" id="nomeFornecedor" name="nomeFornecedor" required >
+            
+            <label for="destinoNF">Quantidade:</label>
+            <input type="number" id="destinoNF" name="destinoNF" required >
+            
+            <label for="valorMercadoria">Valor da Mercadoria:</label>
+            <input type="number" id="valorMercadoria" name="valorMercadoria" required >
+            
+            <button type="button" id="salvarBtn">Salvar</button>
+        </form>
+
+        <div id="consulta">
+            <h2>Consultar Registros</h2>
+            <label for="nomePesquisa">Pesquisar por Nome:</label>
+            <input type="text" id="nomePesquisa" name="nomePesquisa">
+            <button type="button" id="consultarBtn">Consultar</button>
+            <button type="button" id="baixarCSVBtn">Baixar Excel</button>
+            <table id="registros">
+                <thead>
+                    <tr>
+                        <th>Nome:</th>
+                        <th>Quantidade</th>
+                        <th>Valor da Mercadoria</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Aqui serão exibidos os registros -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const salvarBtn = document.getElementById('salvarBtn');
+            const consultarBtn = document.getElementById('consultarBtn');
+            const nomePesquisaInput = document.getElementById('nomePesquisa');
+            const baixarCSVBtn = document.getElementById('baixarCSVBtn');
+            const baixarPDFBtn = document.getElementById('baixarPDFBtn');
+            const registrosTBody = document.querySelector('#registros tbody');
+
+            const registros = [];
+
+            salvarBtn.addEventListener('click', function () {
+                // Capturar os valores dos campos de entrada
+                const nomeFornecedor = document.getElementById('nomeFornecedor').value;
+                const destinoNF = document.getElementById('destinoNF').value;
+                const valorMercadoria = document.getElementById('valorMercadoria').value;
+
+                // Adicionar o registro ao array
+                registros.push({ nomeFornecedor, destinoNF, valorMercadoria });
+
+                // Limpar campos de entrada
+                document.getElementById('nomeFornecedor').value = '';
+                document.getElementById('destinoNF').value = '';
+                document.getElementById('valorMercadoria').value = '';
+            });
+
+            consultarBtn.addEventListener('click', function () {
+                const nomePesquisa = nomePesquisaInput.value.toLowerCase();
+
+                // Limpar registros anteriores da tabela
+                registrosTBody.innerHTML = '';
+
+                // Preencher a tabela com os registros
+                registros.forEach(registro => {
+                    if (!nomePesquisa || registro.nomeFornecedor.toLowerCase().includes(nomePesquisa)) {
+                        const newRow = registrosTBody.insertRow();
+                        const cell1 = newRow.insertCell(0);
+                        const cell2 = newRow.insertCell(1);
+                        const cell3 = newRow.insertCell(2);
+                        cell1.textContent = registro.nomeFornecedor;
+                        cell2.textContent = registro.destinoNF;
+                        cell3.textContent = registro.valorMercadoria;
+                    }
+                });
+            });
+
+            baixarCSVBtn.addEventListener('click', function () {
+                const data = [
+                    ['Nome do Fornecedor', 'Destino da NF', 'Valor da Mercadoria'],
+                    ...registros.map(registro => [registro.nomeFornecedor, registro.destinoNF, registro.valorMercadoria])
+                ];
+
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Registros');
+
+                XLSX.writeFile(wb, 'registros.xlsx');
+            });
+
+            baixarPDFBtn.addEventListener('click', function () {
+                const pdf = new jsPDF();
+                pdf.autoTable({ html: '#registros' });
+                pdf.save('registros.pdf');
+            });
+        });
+    </script>
+</body>
+</html>
